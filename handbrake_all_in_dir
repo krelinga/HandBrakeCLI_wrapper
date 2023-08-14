@@ -21,10 +21,12 @@ function rewrite_input_path() {
   echo "$OUT_DIR/$(echo "$1" | cut -d / -f 2- | cut -d . -f 1).mp4"
 }
 
+# https://stackoverflow.com/questions/369758/how-to-trim-whitespace-from-a-bash-variable 
+TOTAL_FILES="$(find . -type f -name '*.mkv' | wc -l | xargs)"
 find . -type f -name '*.mkv' -print0 | sort -z | while read -d $'\0' IN_PATH ; do
   echo "$IN_PATH -> $(rewrite_input_path "$IN_PATH")"
 done
-echo "$FILE_COUNT total files"
+echo "$TOTAL_FILES total files"
 PRESET=""
 if [[ "$MODE" == "std" ]] ; then
   echo "__NOT__ using up-scaling"
@@ -36,10 +38,12 @@ fi
 read -p "Return to confirm, ctrl-c to cancel" UNUSED
 
 # https://www.cyberciti.biz/tips/handling-filenames-with-spaces-in-bash.html
+CURRENT_FILE_COUNT=0
 find . -type f -name '*.mkv' -print0 | sort -z | while read -d $'\0' IN_PATH ; do
   OUT_PATH=$(rewrite_input_path "$IN_PATH")
+  CURRENT_FILE_COUNT=$((CURRENT_FILE_COUNT+1))
   echo
-  echo "$IN_PATH -> $OUT_PATH"
+  echo "($CURRENT_FILE_COUNT/$TOTAL_FILES) $IN_PATH -> $OUT_PATH"
   mkdir -p "$(dirname "$OUT_PATH")"
   # https://stackoverflow.com/questions/2708097/preventing-a-child-process-handbrakecli-from-causing-the-parent-script-to-exit
   echo "" | HandBrakeCLI --preset-import-gui -i "$IN_PATH" -o "$OUT_PATH" -Z "$PRESET" 2> /dev/null
