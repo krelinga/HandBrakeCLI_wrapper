@@ -1,0 +1,50 @@
+#! /bin/bash
+
+function usage_and_exit() {
+  echo "must supply either 'std' or 'up' as a parameter."
+  exit 1
+}
+
+if [[ "$#" -ne "1" ]] ; then
+  usage_and_exit
+fi
+if [[ "$1" == "std" ]] ; then
+  MODE=std
+elif [[ "$1" == "up" ]] ; then
+  MODE=up
+else
+  usage_and_exit
+fi
+
+OUT_DIR="$HOME/Movies/handbrake_out/$(basename "$(pwd)")"
+function rewrite_input_path() {
+  echo "$OUT_DIR/$(echo "$1" | cut -d / -f 2- | cut -d . -f 1).mp4"
+}
+
+find . -type f -name '*.mkv' -print0 | sort -z | while read -d $'\0' IN_PATH ; do
+  echo "$IN_PATH -> $(rewrite_input_path "$IN_PATH")"
+done
+echo "$FILE_COUNT total files"
+PRESET=""
+if [[ "$MODE" == "std" ]] ; then
+  echo "__NOT__ using up-scaling"
+  PRESET="My Presets/1080p fast no up-scaling"
+else
+  echo "__USING__ up-scaling"
+  PRESET="My Presets/1080p fast with up-scaling"
+fi
+read -p "Return to confirm, ctrl-c to cancel" UNUSED
+
+# https://www.cyberciti.biz/tips/handling-filenames-with-spaces-in-bash.html
+find . -type f -name '*.mkv' -print0 | sort -z | while read -d $'\0' IN_PATH ; do
+  OUT_PATH=$(rewrite_input_path "$IN_PATH")
+  echo
+  echo "$IN_PATH -> $OUT_PATH"
+  mkdir -p "$(dirname "$OUT_PATH")"
+  # https://stackoverflow.com/questions/2708097/preventing-a-child-process-handbrakecli-from-causing-the-parent-script-to-exit
+  echo "" | HandBrakeCLI --preset-import-gui -i "$IN_PATH" -o "$OUT_PATH" -Z "$PRESET" 2> /dev/null
+  if [[ "$?" -ne "0" ]] ; then
+    echo "error!"
+    exit 1
+  fi
+done
