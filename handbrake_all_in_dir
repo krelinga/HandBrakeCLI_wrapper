@@ -18,7 +18,7 @@ fi
 
 OUT_DIR="$HOME/Movies/handbrake_out/$(basename "$(pwd)")"
 function rewrite_input_path() {
-  echo "$OUT_DIR/$(echo "$1" | cut -d / -f 2- | cut -d . -f 1).mp4"
+  echo "$OUT_DIR/$(echo "$1" | cut -d / -f 2- | sed -e 's/.mkv$/.mp4/')"
 }
 
 # https://stackoverflow.com/questions/369758/how-to-trim-whitespace-from-a-bash-variable 
