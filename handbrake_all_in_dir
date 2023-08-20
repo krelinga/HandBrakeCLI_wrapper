@@ -46,7 +46,9 @@ find . -type f -name '*.mkv' -print0 | sort -z | while read -d $'\0' IN_PATH ; d
   echo "($CURRENT_FILE_COUNT/$TOTAL_FILES) $IN_PATH -> $OUT_PATH"
   mkdir -p "$(dirname "$OUT_PATH")"
   # https://stackoverflow.com/questions/2708097/preventing-a-child-process-handbrakecli-from-causing-the-parent-script-to-exit
-  echo "" | HandBrakeCLI --preset-import-gui -i "$IN_PATH" -o "$OUT_PATH" -Z "$PRESET" 2> /dev/null
+  echo "" | HandBrakeCLI \
+    --preset-import-gui -i "$IN_PATH" -o "$OUT_PATH" -Z "$PRESET" \
+    --all-audio --all-subtitles --subtitle-burned=none --subtitle-forced=scan 2> /dev/null
   if [[ "$?" -ne "0" ]] ; then
     echo "error!"
     exit 1
